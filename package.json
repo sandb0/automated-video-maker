@@ -4,5 +4,8 @@
   "description": "Automated video creation and upload.",
   "main": "index.js",
   "author": "Sand Box 0 <sandbox0@hotmail.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "readline-sync": "^1.4.10"
+  }
 }

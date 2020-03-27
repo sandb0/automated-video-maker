@@ -26,10 +26,25 @@ Versão 1:
   Especificar escopo e tarefas.
 
   Orquestrador: Endpoint/Controller.
-    Perguntar pelo termo de busca.
-    Perguntar pelo prefixo.
+    (OK) Perguntar pelo termo de busca.
+    (OK) Perguntar pelo prefixo.
     Iniciar robô de texto.
       Estrutura de dados.
+        content: {
+          searchTerm: '...',
+          searchPrefix: '...',
+
+          sourceContentRaw: '...',
+          sourceContentSanitized: '...',
+
+          sentences: [
+            {
+              text: '...',
+              keywords: ['...'],
+              images: ['...']
+            }
+          ]
+        }
       Pegar conteúdo do Wikipedia.
       Limpar o conteúdo.
       Quebrar em sentenças.
