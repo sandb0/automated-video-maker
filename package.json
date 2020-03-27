@@ -6,6 +6,8 @@
   "author": "Sand Box 0 <sandbox0@hotmail.com>",
   "license": "MIT",
   "dependencies": {
-    "readline-sync": "^1.4.10"
+    "algorithmia": "^0.3.10",
+    "readline-sync": "^1.4.10",
+    "sbd": "^1.0.16"
   }
 }
