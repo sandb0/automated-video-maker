@@ -5,11 +5,15 @@ const robots = {
 
 const robot = function () {
   const content = {
-    maximumSentences: 7
+    maximumSentences: 1,
+    maximumKeywords: 1
   }
 
   content.searchTerm = askAndReturnSearchTerm()
   content.searchPrefix = askAndReturnSearchPrefix(content.searchTerm)
+  content.maximumSentences = askAndReturnMaximumSentences(content.maximumSentences)
+  content.maximumKeywords = askAndReturnMaximumKeywords(content.maximumKeywords)
+  
   robots.state.save(content)
 
   function askAndReturnSearchTerm () {
@@ -28,6 +32,26 @@ const robot = function () {
     const selectedSearchPrefix = searchPrefixes[selectedSearchPrefixIndex]
   
     return selectedSearchPrefix
+  }
+
+  function askAndReturnMaximumSentences (defaultMaximumSentences) {
+    let maximumSentences = readline.question(`How many sentences? (${defaultMaximumSentences}): `)
+    
+    if (maximumSentences <= 0) {
+      maximumSentences = defaultMaximumSentences
+    }
+
+    return maximumSentences
+  }
+
+  function askAndReturnMaximumKeywords (defaultMaximumKeywords) {
+    let maximumKeywords = readline.question(`How many keywords? (${defaultMaximumKeywords}): `)
+  
+    if (maximumKeywords <= 0) {
+      maximumKeywords = defaultMaximumKeywords
+    }
+
+    return maximumKeywords
   }
 }
 

@@ -26,13 +26,14 @@ const robot = async function () {
   breakContentIntoSentences(content)
   limiteMaximumSentences(content)
   await fetchKeywordsOfAllSentences(content)
+  limiteMaximumKeywords(content)
 
   robots.state.save(content)
 
   async function fetchContentFromWikipedia (content) {
     const algorithmiaAuthenticated = algorithmia(algorithmiaApiKey)
     const wikipediaParserAlgorithm = algorithmiaAuthenticated.algo('web/WikipediaParser/0.1.2')
-    const wikipediaResponse = await wikipediaParserAlgorithm.pipe({articleName: content.searchTerm, lang: 'pt'})
+    const wikipediaResponse = await wikipediaParserAlgorithm.pipe({articleName: content.searchTerm, lang: 'en'})
     const wikipediaContent = wikipediaResponse.get()
 
     content.sourceContentRaw = wikipediaContent.content
@@ -114,6 +115,12 @@ const robot = async function () {
           resolve(keywords)
         })
     })
+  }
+
+  function limiteMaximumKeywords (content) {
+    for (sentence of content.sentences) {
+      sentence.keywords = sentence.keywords.slice(0, content.maximumKeywords)
+    }
   }
 }
 
