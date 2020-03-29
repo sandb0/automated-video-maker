@@ -2,13 +2,15 @@ const robots = {
   state: require('./robots/state'),
   input: require('./robots/input'),
   text: require('./robots/text'),
-  image: require('./robots/image')
+  image: require('./robots/image'),
+  video: require('./robots/video')
 }
 
 const orchestrator = (async function () {
-  robots.input()
-  await robots.text()
-  await robots.image()
+  //robots.input()
+  //await robots.text()
+  //await robots.image()
+  await robots.video()
 
   const content = robots.state.load()
   //console.dir(content, { depth: null })
