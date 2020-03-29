@@ -1,11 +1,5 @@
 # Credentials format
 
-## Algorithmia
-
 File: `algorithmia.json`
-
-```
-{
-  "apiKey": "sim8As72h56j3mBYqEOSHfLE4k81"
-}
-```
+File: `google-search.json`
+File: `watson-nlu.json`

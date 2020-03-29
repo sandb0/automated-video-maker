@@ -1,4 +1,5 @@
 node_modules/
 credentials/*.json
 content.json
-content/*
+content/*.png
+content/*.jpg
