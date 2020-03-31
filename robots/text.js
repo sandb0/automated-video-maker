@@ -19,6 +19,8 @@ const nlu = new NaturalLanguageUnderstandingV1({
 });
 
 const robot = async function () {
+  console.log('> [text-robot] Starting...')
+
   const content = robots.state.load()
 
   await fetchContentFromWikipedia(content)
@@ -28,15 +30,21 @@ const robot = async function () {
   await fetchKeywordsOfAllSentences(content)
   limiteMaximumKeywords(content)
 
+  console.log('\n\n\n')
+
   robots.state.save(content)
 
   async function fetchContentFromWikipedia (content) {
+    console.log('> [text-robot] Fetching content from Wikipedia')
+
     const algorithmiaAuthenticated = algorithmia(algorithmiaApiKey)
     const wikipediaParserAlgorithm = algorithmiaAuthenticated.algo('web/WikipediaParser/0.1.2')
     const wikipediaResponse = await wikipediaParserAlgorithm.pipe({articleName: content.searchTerm, lang: 'pt'})
     const wikipediaContent = wikipediaResponse.get()
 
     content.sourceContentRaw = wikipediaContent.content
+
+    console.log('> [text-robot] Fetching done')
   }
 
   function sanitizeContent (content) {
@@ -92,8 +100,14 @@ const robot = async function () {
   }
 
   async function fetchKeywordsOfAllSentences (content) {
+    console.log('> [text-robot] Starting to fetch keywords from Watson')
+
     for (const sentence of content.sentences) {
+      console.log(`> [text-robot] Sentence: "${sentence.text}"`)
+
       sentence.keywords = await fetchWatsonAndReturnKeywords(sentence.text)
+
+      console.log(`> [text-robot] Keywords: ${sentence.keywords.join(', ')}\n`)
     }
   }
 

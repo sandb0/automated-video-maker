@@ -7,31 +7,43 @@ const state = require('./state')
 const customSearch = googleapis.customsearch('v1')
 
 const robot = async function () {
+  console.log('> [image-robot] Starting...')
+
   const content = state.load()
 
   await fetchImagesOfAllSentences(content)
   await downloadAllImages(content)
 
+  console.log('\n\n\n')
+
   state.save(content)
 
   async function fetchImagesOfAllSentences (content) {
-    for (const sentence of content.sentences) {
-      let query = `${content.searchTerm} ${sentence.keywords[0]}`
+    for (let sentenceIndex = 0; sentenceIndex < content.sentences.length; sentenceIndex++) {
+      let query = ''
 
-      sentence.images = await fetchGoogleAndReturnImagesURLs(query)
+      if (sentenceIndex === 0) {
+        query = `${content.searchTerm}`
+      } else {
+        query = `${content.searchTerm} ${content.sentences[sentenceIndex].keywords[0]}`
+      }
 
-      const length = sentence.keywords.length
+      console.log(`> [image-robot] Querying Google Images with "${query}"`)
+
+      content.sentences[sentenceIndex].images = await fetchGoogleAndReturnImagesURLs(query)
+
+      const length = content.sentences[sentenceIndex].keywords.length
 
       for (let i = 0; i < length; i++) {
-        if (sentence.images.length === 0) {
-          query = `${content.searchTerm} ${sentence.keywords[i]}`
-          sentence.images = await fetchGoogleAndReturnImagesURLs(query)
+        if (content.sentences[sentenceIndex].images.length === 0) {
+          query = `${content.searchTerm} ${content.sentences[sentenceIndex].keywords[i]}`
+          content.sentences[sentenceIndex].images = await fetchGoogleAndReturnImagesURLs(query)
         } else {
           break;
         }
       }
 
-      sentence.googleSearchQuery = query
+      content.sentences[sentenceIndex].googleSearchQuery = query
     }
   }
 
@@ -68,15 +80,16 @@ const robot = async function () {
 
         try {
           if (content.downloadedImages.includes(imageURL)) {
-            throw new Error('Imagem já foi baixada.')
+            throw new Error('Image already downloaded')
           }
 
           await downloadAndSave(imageURL, `${sentenceIndex}-original.png`)
           content.downloadedImages.push(imageURL)
+          console.log(`> [image-robot] [${sentenceIndex}][${imageIndex}] Image successfully downloaded: ${imageURL}`)
 
           break;
         } catch (error) {
-          console.error(error)
+          console.log(`> [image-robot] [${sentenceIndex}][${imageIndex}] Error: ${imageURL}`)
         }
       }
     }
