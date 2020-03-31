@@ -9,10 +9,10 @@ const state = require('./state')
 const robot = async function () {
   const content = state.load()
 
-  //await convertAllImages(content)
-  //await writeCaptionInAllImages(content)
-  //await createYouTubeThumbnail()
-  //await createAfterEffectsScript(content)
+  await convertAllImages(content)
+  await writeCaptionInAllImages(content)
+  await createYouTubeThumbnail()
+  await createAfterEffectsScript(content)
   await renderVideoWithAfterEffects()
 
   state.save(content)

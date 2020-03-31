@@ -7,3 +7,5 @@ content/*.png
 content/*.jpg
 content/*.js
 content/*.mov
+
+templates/*

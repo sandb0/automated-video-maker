@@ -8,10 +8,10 @@ const robots = {
 }
 
 const orchestrator = (async function () {
-  //robots.input()
-  //await robots.text()
-  //await robots.image()
-  //await robots.video()
+  robots.input()
+  await robots.text()
+  await robots.image()
+  await robots.video()
   await robots.youtube()
 
   const content = robots.state.load()

@@ -1,23 +1,159 @@
+const express = require('express')
+const google = require('googleapis').google
+const youtube = google.youtube({ version: 'v3' })
+const OAuth2 = google.auth.OAuth2
+const fs = require('fs')
+
 const state = require('./state')
 
 const robot = async function () {
 	const content = state.load()
 
 	await authenticateWithOAuth()
-	await uploadVideo()
-	await uploadThumbnail()
+	const videoInformation = await uploadVideo(content)
+	await uploadThumbnail(videoInformation)
 	
 	async function authenticateWithOAuth () {
-		await startWebServer()
+		const webServer = await startWebServer()
+		const oAuth2Client = await createOAuthClient()
+		requestUserConsent(oAuth2Client)
+		const authorizationToken = await waitForGoogleCallback(webServer)
+		await requestGoogleForAccessTokens(oAuth2Client, authorizationToken)
+		await setGlobalGoogleAuthentication(oAuth2Client)
+		await stopWebServer(webServer)
 		
-		function startWebServer () {
+		async function startWebServer () {
+			return new Promise((resolve, reject) => {
+				const port = 5000
+				const app = express()
+				
+				const server = app.listen(port, () => {
+					console.log(`> Listen on port ${port}.`)
+					
+					resolve({app, server})
+				})
+			})
+		}
+		
+		async function createOAuthClient () {
+			const credentials = require('../credentials/google-youtube.json')
 			
+			const OAuth2Client = new OAuth2(
+				credentials.web.client_id,
+				credentials.web.client_secret,
+				credentials.web.javascript_origins[0]
+			)
+			
+			return OAuth2Client
+		}
+		
+		function requestUserConsent (oAuth2Client) {
+			const consentURL = oAuth2Client.generateAuthUrl({
+				access_type: 'offline',
+				scope: ['https://www.googleapis.com/auth/youtube']
+			})
+			
+			console.log(`> Please give your consent: ${consentURL}`)
+		}
+		
+		async function waitForGoogleCallback (webServer) {
+			return new Promise((resolve, reject) => {
+				console.log('> Wait for user consent')
+				
+				webServer.app.get('/', (request, response) => {
+					const authCode = request.query.code
+					console.log(`> Consent given: ${authCode}`)
+					
+					response.send('<h1>Thank you!</h1><p>Now you can close this tab.</p>')
+					resolve(authCode)
+				})
+			})
+		}
+		
+		async function requestGoogleForAccessTokens (oAuth2Client, authorizationToken) {
+			return new Promise((resolve, reject) => {
+				oAuth2Client.getToken(authorizationToken, (error, tokens) => {
+					if (error) {
+						return reject(error)
+					}
+					
+					console.log('> Access token received: ')
+					console.log(tokens)
+					oAuth2Client.setCredentials(tokens)
+					resolve()
+				})
+			})
+		}
+		
+		function setGlobalGoogleAuthentication (oAuth2Client) {
+			google.options({ auth: oAuth2Client })
+		}
+		
+		async function stopWebServer (webServer) {
+			return new Promise((resolve, reject) => {
+				webServer.server.close(() => {
+					console.log('Server closed.')
+					resolve()
+				})
+			})
 		}
 	}
 	
-	async function uploadVideo() { }
+	async function uploadVideo (content) {
+		const videoFilePath = './content/main.mp4'
+		const videoFileSize = fs.statSync(videoFilePath).size
+		const videoTitle = `${content.searchPrefix} ${content.searchTerm}`
+		const videoTags = [content.searchTerm, ...content.sentences[0].keywords]
+		const videoDescription = content.sentences.map((sentence) => {
+			return sentence.text
+		}).join('\n\n')
+		
+		const requestParameters = {
+			part: 'snippet, status',
+			requestBody: {
+				snippet: {
+					title: videoTitle,
+					description: videoDescription,
+					tags: videoTags
+				},
+				status: {
+					privacyStatus: 'unlisted'
+				}
+			},
+			media: {
+				body: fs.createReadStream(videoFilePath)
+			}
+		}
+		
+		const youtubeResponse = await youtube.videos.insert(requestParameters, {
+			onUploadProgress
+		})
+		
+		console.log(`> Video avaiable at: https://youtu.be/${youtubeResponse.data.id}`)
+		return youtubeResponse.data
+		
+		function onUploadProgress (event) {
+			const progress = Math.round((event.bytesRead / videoFileSize) * 100)
+			console.log(`> Progress: ${progress}% complete`)
+		}
+	}
 	
-	async function uploadVideo() { }
+	async function uploadThumbnail (videoInformation) {
+		const videoId = videoInformation.id
+		const videoThumbnailFilePath = './content/youtube-thumbnail.jpg'
+		
+		const requestParameters = {
+			videoId,
+			media: {
+				mimeType: 'image/jpeg',
+				body: fs.createReadStream(videoThumbnailFilePath)
+			}
+		}
+		
+		const youtubeResponse = await youtube.thumbnails.set(requestParameters)
+		
+		console.log(`> Video thumbnail uploaded.`)
+	}
 
 	state.save(content)
 }
