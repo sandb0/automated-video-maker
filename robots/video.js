@@ -7,6 +7,8 @@ const rootPath = path.resolve(__dirname, '..')
 const state = require('./state')
 
 const robot = async function () {
+  console.log('> [video-robot] Starting...')
+
   const content = state.load()
 
   await convertAllImages(content)
@@ -14,6 +16,8 @@ const robot = async function () {
   await createYouTubeThumbnail()
   await createAfterEffectsScript(content)
   await renderVideoWithAfterEffects()
+
+  console.log('\n\n\n')
 
   state.save(content)
 
@@ -59,7 +63,7 @@ const robot = async function () {
             return reject(error)
           }
 
-          console.log(`> Image converted: ${inputFile}`)
+          console.log(`> [video-robot] Image converted: ${outputFile}`)
           resolve()
         })
     })
@@ -120,7 +124,7 @@ const robot = async function () {
             return reject(error)
           }
 
-          console.log(`> Caption created: ${outputFile}`)
+          console.log(`> [video-robot] Sentence created: ${outputFile}`)
           resolve()
         })
     })
@@ -135,7 +139,7 @@ const robot = async function () {
             return reject(error)
           }
 
-          console.log('> Creating YouTube thumbnail.')
+          console.log('> [video-robot] YouTube thumbnail created.')
           resolve()
         })
     })
@@ -151,7 +155,7 @@ const robot = async function () {
 		const templateFilePath = `${rootPath}/templates/1/template.aep`
 		const destinationFilePath = `${rootPath}/content/output.mov`
 		
-		console.log('> Starting After Effects')
+		console.log('> [video-robot] Starting After Effects')
 		
 		const params = [
 			'-comp', 'main',
@@ -165,7 +169,7 @@ const robot = async function () {
 		})
 		
 		aerender.on('close', () => {
-			console.log('> After Effects Done.')
+			console.log('> [video-robot] After Effects Done.')
 			resolve()
 		})
 	  })
